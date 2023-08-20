@@ -7,11 +7,13 @@ import 'package:get/get.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'config/routes.dart';
+import 'package:permission_handler/permission_handler.dart';
 void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(UserAdapter());
   boxUsers = await Hive.openBox<User>("userBox");
   userPrefs = await SharedPreferences.getInstance();
+  await Permission.manageExternalStorage.request();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
 }

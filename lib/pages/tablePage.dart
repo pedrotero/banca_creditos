@@ -17,10 +17,18 @@ class _TablePageState extends State<TablePage> {
   CreditoController creditController = Get.find();
   var formatter = NumberFormat('#,###.0#');
   int cuotaCount = 0;
+  XcelWorkBook xcel = XcelWorkBook();
   @override
   void initState() {
     super.initState();
     openSimModal(context);
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    xcel.workbook.dispose();
   }
 
   void openSimModal(BuildContext context) {
@@ -141,7 +149,7 @@ class _TablePageState extends State<TablePage> {
               ),
             ),
             Obx(() {
-                cuotaCount = 0;
+              cuotaCount = 0;
               return DataTable(
                   columnSpacing: 10,
                   columns: [
@@ -193,11 +201,54 @@ class _TablePageState extends State<TablePage> {
                     return DataRow(cells: [
                       DataCell(Text("$cuotaCount")),
                       DataCell(Text(formatter.format(cuotaObj.valor))),
-                      DataCell(Text("${formatter.format((interes*100))}%")),
-                      DataCell(Text("+${formatter.format(cuotaObj.abono)}", style: TextStyle(color: Colors.green),)),
+                      DataCell(Text("${formatter.format((interes * 100))}%")),
+                      DataCell(Text(
+                        "+${formatter.format(cuotaObj.abono)}",
+                        style: TextStyle(color: Colors.green),
+                      )),
                     ]);
                   }).toList());
-            })
+            }),
+            InkWell(
+                onTap: () async {
+                    xcel.sheet.getRangeByIndex(1, 1).setText("No. Cuota");
+                    xcel.sheet.getRangeByIndex(1, 2).setText("Valor Cuota");
+                    xcel.sheet.getRangeByIndex(1, 3).setText("Interés");
+                    xcel.sheet.getRangeByIndex(1, 4).setText("Abono a Capital");
+                    for (var i = 0; i < creditController.cuotas.length; i++) {
+                      Cuota iCuota = creditController.cuotas[i];
+                      xcel.sheet
+                          .getRangeByIndex(i + 2, 1)
+                          .setText((i + 1).toString());
+                      xcel.sheet
+                          .getRangeByIndex(i + 2, 2)
+                          .setText(formatter.format(iCuota.valor));
+                      xcel.sheet
+                          .getRangeByIndex(i + 2, 3)
+                          .setText(formatter.format(iCuota.interes*100));
+                      xcel.sheet
+                          .getRangeByIndex(i + 2, 4)
+                          .setText(formatter.format(iCuota.abono));
+                    }
+
+                    final List<int> bytes = xcel.workbook.saveAsStream();
+                    DateTime now = DateTime.now();
+                    xcel.saveFileToDest("","tabla_amortizacion $now.xlsx",bytes);
+
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 120),
+                  decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Text("Descargar Tabla",
+                      style: GoogleFonts.openSans(
+                          textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700))),
+                )),
           ],
         ),
       )),

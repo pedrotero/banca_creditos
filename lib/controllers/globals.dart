@@ -11,3 +11,5 @@ enum CreditoEnum {
 late Box boxUsers;
 late SharedPreferences userPrefs;
 
+late var filePermissionStatus;
+
